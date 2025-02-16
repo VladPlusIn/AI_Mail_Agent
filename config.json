@@ -1,0 +1,9 @@
+{
+    "OPENAI_API_KEY": "",
+    "USER_EMAIL": "",
+    "AI_RESPONSE_PROMPT": "",
+    "DAYS_FOR_UNREAD_EMAIL": "3",
+    "PROMPT_NEED_REPLY": "directly addressed, question, or complaint",
+    "PROMPT_MIGHT_REPLY": "general request where user is in CC",
+    "PROMPT_MAYNOT_REPLY": "no response needed"
+}
