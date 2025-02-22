@@ -13,6 +13,14 @@ LOG_FILE = "email_rag_log.jsonl"
 LOG_TABLE_FILE = "email_rag_log.csv"
 CONFIG_FILE = "config.json"
 
+# Ensure log files exist
+if not os.path.exists(LOG_FILE):
+    with open(LOG_FILE, "w", encoding="utf-8") as f:
+        f.write("")  # Create an empty JSONL file
+
+if not os.path.exists(LOG_TABLE_FILE):
+    pd.DataFrame(columns=["timestamp", "subject", "sender", "received_time", "body_summary", "ai_response", "importance"]).to_csv(LOG_TABLE_FILE, index=False)
+
 # Load user-specific configuration
 CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), CONFIG_FILE)
 if os.path.exists(CONFIG_PATH):
