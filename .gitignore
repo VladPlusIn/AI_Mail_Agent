@@ -1,0 +1,26 @@
+# Ignore logs
+email_rag_log.jsonl
+email_rag_log.csv
+
+# Ignore configuration files
+config.json
+
+# Ignore compiled Python files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore virtual environment
+venv/
+env/
+*.env
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore IDE/project files
+.vscode/
+.idea/
+*.iml
