@@ -47,6 +47,13 @@ client = OpenAI(
     api_key=API_KEY,
 )
 
+# Define Outlook Categories with Correct Color Index
+CATEGORIES = {
+    "Need to Reply": 2,   # OlCategoryColorDarkOrange
+    "Might Reply": 10,    # OlCategoryColorTeal
+    "May Not Reply": 4    # OlCategoryColorGreen
+}
+
 def safe_ai_call(**kwargs):
     """
     A wrapper for AI calls that handles connectivity and rate-limit errors.
@@ -158,6 +165,40 @@ def log_email_data(email, summary, response, importance):
             log_df.to_csv(LOG_TABLE_FILE, mode='a', header=False, index=False)
     except Exception as e:
         print(f"[Error writing to CSV log] {e}")
+
+def setup_outlook_categories():
+    """Creates missing categories in Outlook."""
+    try:
+        outlook = win32com.client.Dispatch("Outlook.Application")
+        namespace = outlook.GetNamespace("MAPI")
+        categories = namespace.Categories
+
+        for name, color_index in CATEGORIES.items():
+            if name not in [c.Name for c in categories]:
+                categories.Add(name, color_index)
+                print(f"Created category: {name} (Color Index: {color_index})")
+
+    except Exception as e:
+        print(f"[Error] Unable to create categories: {e}")
+
+def assign_email_category(email, category_name):
+    """Assigns an Outlook category to an email, preventing duplicate assignments."""
+    try:
+        outlook = win32com.client.Dispatch("Outlook.Application")
+        inbox = outlook.GetNamespace("MAPI").GetDefaultFolder(6)
+        messages = inbox.Items
+
+        for msg in messages:
+            if msg.Subject == email["Subject"] and msg.SenderName == email["Sender"]:
+                if category_name not in msg.Categories:
+                    msg.Categories += f";{category_name}" if msg.Categories else category_name
+                    msg.Save()
+                    print(f"Assigned category '{category_name}' to email: {email['Subject']}")
+                else:
+                    print(f"Email '{email['Subject']}' already has category '{category_name}'. Skipping assignment.")
+                return
+    except Exception as e:
+        print(f"[Error] Unable to assign category: {e}")
 
 def get_unread_emails():
     """Retrieves unread emails from the last N days, based on config."""
@@ -276,6 +317,8 @@ def process_emails():
     Processes unread emails from the last N days (DAYS_FOR_UNREAD_EMAIL).
     Logs them, then classifies. If classification is 'Need to Reply', we auto-reply.
     """
+    setup_outlook_categories()
+
     unread_emails = get_unread_emails()
     if not unread_emails:
         print("No unread emails found in the specified time range.")
@@ -284,6 +327,8 @@ def process_emails():
     for email in unread_emails:
         # Classify
         importance = determine_email_importance(email)
+        assign_email_category(email, importance)
+
         # Summarize
         summary = summarize_text(email["Body"])
         # If 'Need to Reply', produce an AI-based response
